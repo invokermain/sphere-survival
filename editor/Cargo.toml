@@ -1,0 +1,10 @@
+
+[package]
+name = "editor"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+fyrox = { git = "https://github.com/FyroxEngine/Fyrox" }
+fyroxed_base = { git = "https://github.com/FyroxEngine/Fyrox" }
+mason = { path = "../game" }
