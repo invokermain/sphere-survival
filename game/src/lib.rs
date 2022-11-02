@@ -1,15 +1,22 @@
 //! Game project.
+mod balls;
 mod player;
+mod user_interface;
 
+use balls::Balls;
 use fyrox::{
     core::{futures::executor::block_on, pool::Handle},
     event::{Event, WindowEvent},
     event_loop::ControlFlow,
-    gui::message::UiMessage,
+    gui::{
+        message::{MessageDirection, UiMessage},
+        text::TextMessage,
+    },
     plugin::{Plugin, PluginConstructor, PluginContext, PluginRegistrationContext},
     scene::{Scene, SceneLoader},
 };
 use player::Player;
+use user_interface::GameUI;
 
 pub struct GameConstructor;
 
@@ -28,6 +35,8 @@ impl PluginConstructor for GameConstructor {
 pub struct Game {
     scene: Handle<Scene>,
     player: Player,
+    balls: Balls,
+    ui: GameUI,
 }
 
 impl Game {
@@ -52,22 +61,34 @@ impl Game {
 
         let player = Player::new(scene);
 
+        let balls = Balls::new(scene);
+
         Self {
             player,
+            balls,
             scene: scene_handle,
+            ui: GameUI::new(context.user_interface),
         }
     }
 }
 
 impl Plugin for Game {
-    fn on_deinit(&mut self, _context: PluginContext) {
-        // Do a cleanup here.
-    }
+    fn on_deinit(&mut self, _context: PluginContext) {}
 
     fn update(&mut self, context: &mut PluginContext, _control_flow: &mut ControlFlow) {
         let scene = &mut context.scenes[self.scene];
 
+        // for ball in &self.balls.balls {}
+
         self.player.update(scene, context.dt);
+
+        // update UI
+        let fps = format!("{:.1} fps", 1.0 / context.dt);
+        context.user_interface.send_message(TextMessage::text(
+            self.ui.fps_counter,
+            MessageDirection::ToWidget,
+            fps,
+        ))
     }
 
     fn on_os_event(
@@ -96,6 +117,5 @@ impl Plugin for Game {
         _message: &UiMessage,
         _control_flow: &mut ControlFlow,
     ) {
-        // Handle UI events here.
     }
 }

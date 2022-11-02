@@ -2,17 +2,16 @@ mod camera_controller;
 pub use camera_controller::CameraController;
 use fyrox::{
     core::{
-        algebra::{Quaternion, Unit, Vector3, Vector4, Vector6},
+        algebra::{Quaternion, Unit, Vector3},
         pool::Handle,
-        profiler::print,
     },
     event::{DeviceEvent, ElementState, KeyboardInput, VirtualKeyCode},
     scene::{
         base::BaseBuilder,
-        collider::{ColliderBuilder, ColliderShape},
+        collider::{Collider, ColliderBuilder, ColliderShape},
         node::Node,
-        rigidbody::RigidBodyBuilder,
-        transform::{Transform, TransformBuilder},
+        rigidbody::{RigidBodyBuilder, RigidBodyType},
+        transform::Transform,
         Scene,
     },
 };
@@ -49,6 +48,7 @@ impl Thrust {
 }
 
 pub struct Player {
+    mouse_sensitivity: f32,
     camera_controller: CameraController,
     body: Handle<Node>,
     collider: Handle<Node>,
@@ -58,32 +58,25 @@ pub struct Player {
 
 impl Player {
     pub fn new(scene: &mut Scene) -> Self {
-        // Create new rigid body and offset it a bit to prevent falling through the ground.
         let collider;
         let body = RigidBodyBuilder::new(
             BaseBuilder::new()
-                .with_local_transform(
-                    TransformBuilder::new()
-                        .with_local_position(Vector3::new(0.0, 0.0, 0.0))
-                        .build(),
-                )
+                .with_name("PlayerRigidBody")
                 .with_children(&[{
-                    // Create capsule collider with friction disabled. We need to disable friction because linear
-                    // velocity will be set manually, but the physics engine will reduce it using friction so it
-                    // won't let us to set linear velocity precisely.
-                    collider = ColliderBuilder::new(BaseBuilder::new())
-                        .with_shape(ColliderShape::capsule_y(0.55, 0.15))
+                    collider = ColliderBuilder::new(BaseBuilder::new().with_name("PlayerCollider"))
+                        .with_shape(ColliderShape::ball(9.5))
                         .with_friction(0.0)
                         .build(&mut scene.graph);
                     collider
                 }]),
         )
-        .with_can_sleep(false)
+        .with_body_type(RigidBodyType::Dynamic)
         .with_gravity_scale(0.0)
+        .with_ccd_enabled(true)
         .build(&mut scene.graph);
 
         Self {
-            // As a final stage create camera controller.
+            mouse_sensitivity: 0.0025,
             camera_controller: CameraController::new(&mut scene.graph),
             collider,
             body,
@@ -93,7 +86,13 @@ impl Player {
     }
 
     pub fn handle_device_event(&mut self, device_event: &DeviceEvent) {
-        self.camera_controller.handle_device_event(device_event)
+        if let DeviceEvent::MouseMotion { delta } = device_event {
+            self.camera_controller.rotate_by(
+                -1.0 * (delta.0 as f32) * self.mouse_sensitivity,
+                (delta.1 as f32) * self.mouse_sensitivity,
+                0.0,
+            )
+        }
     }
 
     pub fn handle_key_event(&mut self, key: &KeyboardInput) {
@@ -111,19 +110,64 @@ impl Player {
     }
 
     pub fn update(&mut self, scene: &mut Scene, dt: f32) {
+        // update camera so rotation is up to date
         self.camera_controller.update(&mut scene.graph);
 
-        let camera_transform: &Transform =
-            scene.graph[self.camera_controller.pivot].local_transform();
+        // handle colliders events
+        let collider = scene.graph[self.collider].as_collider();
 
-        self.momentum += self.thrust.to_rotated_vector(**camera_transform.rotation()) * dt * 0.25;
+        let collision_event = collider
+            .contacts(&scene.graph.physics)
+            .find(|f| f.has_any_active_contact);
 
+        if let Some(collision_event) = collision_event {
+            let collider1: &Collider = scene.graph[collision_event.collider1].as_collider();
+            let collider2: &Collider = scene.graph[collision_event.collider2].as_collider();
+
+            match collider1.name() {
+                "WorldBoundsCollider" => {
+                    // we are out of bounds need to bounce off of the wall
+                    // get our body transform
+                    let body_transform: &mut Transform =
+                        scene.graph[self.body].local_transform_mut();
+                    if self.momentum.dot(&**body_transform.position()) > 0.0 {
+                        self.momentum *= -1.0;
+                        self.apply_momentum(scene);
+                    };
+                    return;
+                }
+                _ => {
+                    println!(
+                        "collision: {:?}, {:?}, {}",
+                        collider1.name(),
+                        collider2.name(),
+                        collision_event.has_any_active_contact
+                    )
+                }
+            };
+        }
+
+        // get the camera's current rotation
+        let rotation = self.camera_controller.get_rotation(&scene.graph);
+
+        // update momentum by adding thrust in the direction we are looking
+        self.momentum += self.thrust.to_rotated_vector(rotation) * dt * 0.25;
+
+        self.apply_momentum(scene)
+    }
+
+    fn apply_momentum(&mut self, scene: &mut Scene) {
+        // get our body transform
         let body_transform: &mut Transform = scene.graph[self.body].local_transform_mut();
-        body_transform.set_position(**body_transform.position() + self.momentum);
-        let new_position = **body_transform.position();
 
-        let camera_transform: &mut Transform =
-            scene.graph[self.camera_controller.pivot].local_transform_mut();
-        camera_transform.set_position(new_position);
+        // calculate our new position
+        let position = **body_transform.position() + self.momentum;
+
+        // set our new position
+        body_transform.set_position(position);
+
+        // update the camera to be in the same position
+        self.camera_controller
+            .set_position(&mut scene.graph, position);
     }
 }

@@ -3,27 +3,18 @@ use fyrox::{
         algebra::{UnitQuaternion, Vector3},
         pool::Handle,
     },
-    engine::resource_manager::ResourceManager,
-    event::DeviceEvent,
     scene::{
-        base::BaseBuilder,
-        camera::CameraBuilder,
-        graph::Graph,
-        node::Node,
-        pivot::{Pivot, PivotBuilder},
-        transform::{Transform, TransformBuilder},
+        base::BaseBuilder, camera::CameraBuilder, graph::Graph, node::Node, pivot::PivotBuilder,
+        transform::TransformBuilder,
     },
 };
 
-// Camera controller consists of three scene nodes - two pivots and one camera.
 pub struct CameraController {
-    // Pivot is the origin of our camera controller.
-    pub pivot: Handle<Node>,
+    pivot: Handle<Node>,
     camera: Handle<Node>,
-    // An angle around local Y axis of the pivot.
-    pub yaw: f32,
-    // An angle around local X axis of the hinge.
+    yaw: f32,
     pitch: f32,
+    roll: f32,
 }
 
 impl CameraController {
@@ -31,11 +22,7 @@ impl CameraController {
         let camera;
         let pivot = PivotBuilder::new(BaseBuilder::new().with_children(&[{
             camera = CameraBuilder::new(
-                BaseBuilder::new().with_local_transform(
-                    TransformBuilder::new()
-                        .with_local_position(Vector3::new(0.0, 0.0, -2.0))
-                        .build(),
-                ),
+                BaseBuilder::new().with_local_transform(TransformBuilder::new().build()),
             )
             .with_z_far(48.0)
             .build(graph);
@@ -48,28 +35,39 @@ impl CameraController {
             camera,
             yaw: 0.0,
             pitch: 0.0,
+            roll: 0.0,
         }
     }
 
-    pub fn handle_device_event(&mut self, device_event: &DeviceEvent) {
-        if let DeviceEvent::MouseMotion { delta } = device_event {
-            const MOUSE_SENSITIVITY: f32 = 0.0025;
-
-            self.yaw -= (delta.0 as f32) * MOUSE_SENSITIVITY;
-            self.pitch = (self.pitch + (delta.1 as f32) * MOUSE_SENSITIVITY)
-                // Limit vertical angle to [-90; 90] degrees range
-                .max(-90.0f32.to_radians())
-                .min(90.0f32.to_radians());
-        }
+    pub fn rotate_by(&mut self, yaw: f32, pitch: f32, roll: f32) {
+        self.yaw += yaw;
+        self.pitch += pitch;
+        self.roll += roll;
     }
 
     pub fn update(&mut self, graph: &mut Graph) {
-        // Apply rotation to the pivot.
-        let transform: &mut Transform = graph[self.pivot].local_transform_mut();
+        let rotation = UnitQuaternion::from_axis_angle(&Vector3::y_axis(), self.yaw)
+            * UnitQuaternion::from_axis_angle(&Vector3::x_axis(), self.pitch)
+            * UnitQuaternion::from_axis_angle(&Vector3::z_axis(), self.roll);
 
-        transform.set_rotation(
-            UnitQuaternion::from_axis_angle(&Vector3::y_axis(), self.yaw)
-                * UnitQuaternion::from_axis_angle(&Vector3::x_axis(), self.pitch),
-        );
+        graph[self.pivot]
+            .local_transform_mut()
+            .set_rotation(rotation);
+    }
+
+    pub fn get_rotation(&self, graph: &Graph) -> UnitQuaternion<f32> {
+        **graph[self.pivot].local_transform().rotation()
+    }
+
+    pub fn set_rotation(&mut self, graph: &mut Graph, rotation: UnitQuaternion<f32>) {
+        graph[self.pivot]
+            .local_transform_mut()
+            .set_rotation(rotation);
+    }
+
+    pub fn set_position(&mut self, graph: &mut Graph, position: Vector3<f32>) {
+        graph[self.pivot]
+            .local_transform_mut()
+            .set_position(position);
     }
 }
