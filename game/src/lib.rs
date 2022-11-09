@@ -1,9 +1,9 @@
 //! Game project.
-mod balls;
+mod ball;
 mod player;
 mod user_interface;
 
-use balls::Balls;
+use ball::Ball;
 use fyrox::{
     core::{futures::executor::block_on, pool::Handle},
     event::{Event, WindowEvent},
@@ -21,7 +21,9 @@ use user_interface::GameUI;
 pub struct GameConstructor;
 
 impl PluginConstructor for GameConstructor {
-    fn register(&self, _context: PluginRegistrationContext) {}
+    fn register(&self, context: PluginRegistrationContext) {
+        context.serialization_context.script_constructors.add::<Ball>("Ball");
+    }
 
     fn create_instance(
         &self,
@@ -35,7 +37,6 @@ impl PluginConstructor for GameConstructor {
 pub struct Game {
     scene: Handle<Scene>,
     player: Player,
-    balls: Balls,
     ui: GameUI,
 }
 
@@ -61,11 +62,8 @@ impl Game {
 
         let player = Player::new(scene);
 
-        let balls = Balls::new(scene);
-
         Self {
             player,
-            balls,
             scene: scene_handle,
             ui: GameUI::new(context.user_interface),
         }
@@ -77,8 +75,6 @@ impl Plugin for Game {
 
     fn update(&mut self, context: &mut PluginContext, _control_flow: &mut ControlFlow) {
         let scene = &mut context.scenes[self.scene];
-
-        // for ball in &self.balls.balls {}
 
         self.player.update(scene, context.dt);
 
