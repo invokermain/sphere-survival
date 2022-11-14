@@ -10,7 +10,7 @@ use fyrox::{
     plugin::{Plugin, PluginConstructor, PluginContext},
     scene::{Scene, SceneLoader},
 };
-use mason::GameConstructor;
+use manvsball::GameConstructor;
 use wasm_bindgen::prelude::wasm_bindgen;
 
 pub struct WebGameConstructor;

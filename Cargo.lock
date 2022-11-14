@@ -609,7 +609,7 @@ version = "0.1.0"
 dependencies = [
  "fyrox",
  "fyroxed_base",
- "mason",
+ "manvsball",
 ]
 
 [[package]]
@@ -632,7 +632,7 @@ name = "executor"
 version = "0.1.0"
 dependencies = [
  "fyrox",
- "mason",
+ "manvsball",
 ]
 
 [[package]]
@@ -1333,7 +1333,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "mason"
+name = "manvsball"
 version = "0.1.0"
 dependencies = [
  "fyrox",
@@ -2654,7 +2654,7 @@ version = "0.1.0"
 dependencies = [
  "console_error_panic_hook",
  "fyrox",
- "mason",
+ "manvsball",
  "wasm-bindgen",
  "wasm-bindgen-futures",
 ]

@@ -6,4 +6,4 @@ edition = "2021"
 
 [dependencies]
 fyrox = { git = "https://github.com/FyroxEngine/Fyrox" }
-mason = { path = "../game" }
+manvsball = { path = "../game" }

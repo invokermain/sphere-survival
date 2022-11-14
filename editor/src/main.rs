@@ -1,7 +1,7 @@
 //! Editor with your game connected to it as a plugin.
 use fyrox::event_loop::EventLoop;
 use fyroxed_base::{Editor, StartupData};
-use mason::GameConstructor;
+use manvsball::GameConstructor;
 
 fn main() {
     let event_loop = EventLoop::new();

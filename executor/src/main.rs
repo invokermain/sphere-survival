@@ -1,6 +1,6 @@
 //! Executor with your game connected to it as a plugin.
 use fyrox::engine::executor::Executor;
-use mason::GameConstructor;
+use manvsball::GameConstructor;
 
 fn main() {
     let mut executor = Executor::new();
