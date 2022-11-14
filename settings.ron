@@ -26,7 +26,7 @@
             light_scatter_enabled: true,
             fxaa: true,
             use_parallax_mapping: false,
-            use_bloom: true,
+            use_bloom: false,
         ),
         z_near: 0.025,
         z_far: 128.0,
@@ -60,14 +60,23 @@
         invert_dragging: false,
         drag_speed: 0.01,
         camera_settings: {
+            ".\\data\\scene.rgs": (
+                position: [
+                    -4.2700005,
+                    0.8200001,
+                    -11.0,
+                ],
+                yaw: 0.0,
+                pitch: 0.0,
+            ),
             "data/scene.rgs": (
                 position: [
-                    5.7380037,
-                    2.1659818,
-                    -3.0758805,
+                    -20.638004,
+                    14.529971,
+                    -24.888287,
                 ],
-                yaw: -1.2699994,
-                pitch: 0.6800004,
+                yaw: 0.85000086,
+                pitch: 0.4300006,
             ),
         },
     ),
@@ -78,6 +87,7 @@
     recent: (
         scenes: [
             "data/scene.rgs",
+            ".\\data\\scene.rgs",
         ],
     ),
 )

@@ -1,12 +1,14 @@
 //! Game project.
 mod ball;
+mod camera_controller;
 mod player;
 mod user_interface;
 
 use ball::Ball;
+use camera_controller::CameraController;
 use fyrox::{
-    core::{futures::executor::block_on, pool::Handle},
-    event::{Event, WindowEvent},
+    core::{algebra::Vector3, futures::executor::block_on, pool::Handle},
+    event::Event,
     event_loop::ControlFlow,
     gui::{
         message::{MessageDirection, UiMessage},
@@ -15,6 +17,7 @@ use fyrox::{
     plugin::{Plugin, PluginConstructor, PluginContext, PluginRegistrationContext},
     scene::{Scene, SceneLoader},
 };
+
 use player::Player;
 use user_interface::GameUI;
 
@@ -22,7 +25,12 @@ pub struct GameConstructor;
 
 impl PluginConstructor for GameConstructor {
     fn register(&self, context: PluginRegistrationContext) {
-        context.serialization_context.script_constructors.add::<Ball>("Ball");
+        context
+            .serialization_context
+            .script_constructors
+            .add::<Ball>("Ball")
+            .add::<CameraController>("CameraController")
+            .add::<Player>("PlayerController");
     }
 
     fn create_instance(
@@ -36,7 +44,6 @@ impl PluginConstructor for GameConstructor {
 
 pub struct Game {
     scene: Handle<Scene>,
-    player: Player,
     ui: GameUI,
 }
 
@@ -58,12 +65,9 @@ impl Game {
             context.scenes.add(scene)
         };
 
-        let scene = context.scenes.try_get_mut(scene_handle).unwrap();
-
-        let player = Player::new(scene);
+        context.scenes[scene_handle].graph.physics.gravity = Vector3::zeros();
 
         Self {
-            player,
             scene: scene_handle,
             ui: GameUI::new(context.user_interface),
         }
@@ -74,10 +78,6 @@ impl Plugin for Game {
     fn on_deinit(&mut self, _context: PluginContext) {}
 
     fn update(&mut self, context: &mut PluginContext, _control_flow: &mut ControlFlow) {
-        let scene = &mut context.scenes[self.scene];
-
-        self.player.update(scene, context.dt);
-
         // update UI
         let fps = format!("{:.1} fps", 1.0 / context.dt);
         context.user_interface.send_message(TextMessage::text(
@@ -89,22 +89,10 @@ impl Plugin for Game {
 
     fn on_os_event(
         &mut self,
-        event: &Event<()>,
+        _event: &Event<()>,
         _context: PluginContext,
         _control_flow: &mut ControlFlow,
     ) {
-        match event {
-            Event::DeviceEvent { event, .. } => {
-                self.player.handle_device_event(event);
-            }
-            Event::WindowEvent {
-                event: WindowEvent::KeyboardInput { input, .. },
-                ..
-            } => {
-                self.player.handle_key_event(input);
-            }
-            _ => (),
-        }
     }
 
     fn on_ui_message(

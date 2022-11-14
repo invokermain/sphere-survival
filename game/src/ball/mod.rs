@@ -1,6 +1,6 @@
 use fyrox::{
     core::{
-        algebra::{Vector3},
+        algebra::Vector3,
         inspect::prelude::*,
         pool::Handle,
         reflect::Reflect,
@@ -10,9 +10,7 @@ use fyrox::{
     engine::resource_manager::ResourceManager,
     event::Event,
     impl_component_provider,
-    scene::{
-        node::{Node, TypeUuidProvider},
-    },
+    scene::node::{Node, TypeUuidProvider},
     script::{ScriptContext, ScriptDeinitContext, ScriptTrait},
 };
 
@@ -35,8 +33,8 @@ impl ScriptTrait for Ball {
     }
 
     fn on_start(&mut self, context: &mut ScriptContext) {
-        let body = context.scene.graph[self.body].as_rigid_body_mut();
-        body.apply_force(Vector3::new(100.0, -5.0, 5.0))
+        // let body = context.scene.graph[self.body].as_rigid_body_mut();
+        // body.apply_force(Vector3::new(100.0, 0.0, 0.0))
     }
 
     fn on_deinit(&mut self, _context: &mut ScriptDeinitContext) {
@@ -47,9 +45,7 @@ impl ScriptTrait for Ball {
         // Respond to OS events here.
     }
 
-    fn on_update(&mut self, context: &mut ScriptContext) {
-
-    }
+    fn on_update(&mut self, _context: &mut ScriptContext) {}
 
     fn restore_resources(&mut self, _resource_manager: ResourceManager) {
         // Restore resource handles here.
