@@ -1,73 +1,41 @@
-extern crate console_error_panic_hook;
-use std::{panic, sync::Arc};
-
-use fyrox::{
-    core::pool::Handle,
-    engine::{executor::Executor, SerializationContext},
-    event::Event,
-    event_loop::ControlFlow,
-    gui::message::UiMessage,
-    plugin::{Plugin, PluginConstructor, PluginContext},
-    scene::{Scene, SceneLoader},
-};
+//! Executor with your game connected to it as a plugin.
+use fyrox::core::wasm_bindgen::{self, prelude::*};
+use fyrox::engine::executor::Executor;
 use manvsball::GameConstructor;
-use wasm_bindgen::prelude::wasm_bindgen;
 
-pub struct WebGameConstructor;
-
-impl PluginConstructor for WebGameConstructor {
-    fn create_instance(
-        &self,
-        _override_scene: Handle<Scene>,
-        context: PluginContext,
-    ) -> Box<dyn Plugin> {
-        Box::new(WebGame::new(context))
-    }
+#[wasm_bindgen]
+extern "C" {
+    #[wasm_bindgen(js_namespace = console)]
+    fn error(msg: String);
+    type Error;
+    #[wasm_bindgen(constructor)]
+    fn new() -> Error;
+    #[wasm_bindgen(structural, method, getter)]
+    fn stack(error: &Error) -> String;
 }
 
-pub struct WebGame {}
-
-async fn load_scene(context: Arc<SerializationContext>) {
-    SceneLoader::from_file("../data/scene.rgs", context.clone())
-        .await
-        .expect("Problem loading scene!");
+fn custom_panic_hook(info: &std::panic::PanicInfo) {
+    let mut msg = info.to_string();
+    msg.push_str("\n\nStack:\n\n");
+    let e = Error::new();
+    let stack = e.stack();
+    msg.push_str(&stack);
+    msg.push_str("\n\n");
+    error(msg);
 }
 
-impl WebGame {
-    pub fn new(context: PluginContext) -> Self {
-        wasm_bindgen_futures::spawn_local(load_scene(context.serialization_context.clone()));
-
-        Self {}
-    }
-}
-
-impl Plugin for WebGame {
-    fn on_deinit(&mut self, _context: PluginContext) {}
-
-    fn update(&mut self, _context: &mut PluginContext, _control_flow: &mut ControlFlow) {}
-
-    fn on_os_event(
-        &mut self,
-        _event: &Event<()>,
-        _context: PluginContext,
-        _control_flow: &mut ControlFlow,
-    ) {
-    }
-
-    fn on_ui_message(
-        &mut self,
-        _context: &mut PluginContext,
-        _message: &UiMessage,
-        _control_flow: &mut ControlFlow,
-    ) {
-    }
+#[inline]
+pub fn set_panic_hook() {
+    use std::sync::Once;
+    static SET_HOOK: Once = Once::new();
+    SET_HOOK.call_once(|| {
+        std::panic::set_hook(Box::new(custom_panic_hook));
+    });
 }
 
 #[wasm_bindgen]
-pub fn run_game() {
-    // this hook makes wasm panic messages much better
-    panic::set_hook(Box::new(console_error_panic_hook::hook));
-
+pub fn main() {
+    set_panic_hook();
     let mut executor = Executor::new();
     executor.add_plugin_constructor(GameConstructor);
     executor.run()

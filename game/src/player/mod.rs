@@ -5,13 +5,12 @@ use fyrox::{
         pool::Handle,
     },
     event::{ElementState, KeyboardInput, VirtualKeyCode, WindowEvent},
-    scene::{collider::Collider, node::Node, rigidbody::RigidBody, transform::Transform, Scene},
+    scene::{node::Node, rigidbody::RigidBody},
 };
 
 use fyrox::{
     core::{
-        inspect::prelude::*,
-        reflect::Reflect,
+        reflect::prelude::*,
         uuid::{uuid, Uuid},
         visitor::prelude::*,
     },
@@ -22,7 +21,7 @@ use fyrox::{
     script::{ScriptContext, ScriptDeinitContext, ScriptTrait},
 };
 
-#[derive(Default, Visit, Reflect, Inspect, Debug, Clone)]
+#[derive(Default, Visit, Reflect, Debug, Clone)]
 struct Thrust {
     forward: bool,
     back: bool,
@@ -53,7 +52,7 @@ impl Thrust {
     }
 }
 
-#[derive(Visit, Reflect, Inspect, Default, Debug, Clone)]
+#[derive(Visit, Reflect, Default, Debug, Clone)]
 pub struct Player {
     camera_pivot: Handle<Node>,
     body: Handle<Node>,
@@ -96,47 +95,6 @@ impl ScriptTrait for Player {
     fn on_update(&mut self, context: &mut ScriptContext) {
         let scene = &mut context.scene;
         let dt = context.dt;
-
-        // handle colliders events
-        let collider = scene.graph[self.collider].as_collider();
-
-        let collision_event = collider
-            .contacts(&scene.graph.physics)
-            .find(|f| f.has_any_active_contact);
-
-        if let Some(collision_event) = collision_event {
-            let collider1: &Collider = scene.graph[collision_event.collider1].as_collider();
-            let collider2: &Collider = scene.graph[collision_event.collider2].as_collider();
-
-            println!(
-                "collision: {:?}, {:?}, {}",
-                collider1.name(),
-                collider2.name(),
-                collision_event.has_any_active_contact
-            );
-
-            // match collider1.name() {
-            //     "WorldBoundsCollider" => {
-            //         // we are out of bounds need to bounce off of the wall
-            //         // get our body transform
-            //         let body_transform: &mut Transform =
-            //             scene.graph[self.body].local_transform_mut();
-            //         if self.momentum.dot(&**body_transform.position()) > 0.0 {
-            //             self.momentum *= -1.0;
-            //             self.apply_momentum(scene);
-            //         };
-            //         return;
-            //     }
-            //     _ => {
-            //         println!(
-            //             "collision: {:?}, {:?}, {}",
-            //             collider1.name(),
-            //             collider2.name(),
-            //             collision_event.has_any_active_contact
-            //         )
-            //     }
-            // };
-        }
 
         // get the camera's current rotation
         let rotation = **scene.graph[self.camera_pivot].local_transform().rotation();

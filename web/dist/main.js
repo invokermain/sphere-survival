@@ -1,10 +1,11 @@
-import init, { run_game } from './pkg/wasm.js';
+import init, { main } from './pkg/wasm.js';
 
-
+const elementTargetButton = document.querySelector('#button-start')
+const elementMain = document.querySelector('#main')
 
 async function run() {
     elementTargetButton.removeEventListener('click', run)
-    elementmain.remove()
+    elementMain.remove()
 
     const context = new AudioContext()
 
@@ -14,7 +15,7 @@ async function run() {
 
     await init()
 
-    run_game()
+    main()
 }
 
 elementTargetButton.addEventListener('click', run, {

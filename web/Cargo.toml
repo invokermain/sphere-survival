@@ -5,11 +5,8 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-console_error_panic_hook = "0.1.7"
 fyrox = { git = "https://github.com/FyroxEngine/Fyrox" }
 manvsball = { path = "../game" }
-wasm-bindgen = "0.2.74"
-wasm-bindgen-futures = "0.4.33"
 
 [lib]
-crate-type = ["cdylib"]
+crate-type = ["cdylib", "rlib"]

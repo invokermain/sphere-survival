@@ -5,37 +5,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>My Game</title>
-    <script type="module">
-        const elementTargetButton = document.querySelector('#button-start');
-        const elementmain = document.querySelector('#main');
-
-        // See https://rustwasm.github.io/docs/wasm-bindgen/examples/without-a-bundler.html
-        // for more details.
-        import init, { run_game } from './pkg/wasm.js';
-
-        async function run() {
-            await init();
-
-            // remove the play button and start audio context
-            elementTargetButton.removeEventListener('click', run)
-            elementmain.remove()
-
-
-            const context = new AudioContext()
-
-            if (context.state !== 'running') {
-                await context.resume()
-            }
-
-            // game entrypoint
-            run_game()
-        }
-
-        elementTargetButton.addEventListener('click', run, {
-            once: true,
-            passive: true,
-        })
-    </script>
+    <script type="module" defer src="main.js"></script>
 </head>
 
 <body>

@@ -1,9 +1,8 @@
 use fyrox::{
     core::{
         algebra::{UnitQuaternion, Vector3},
-        inspect::prelude::*,
         pool::Handle,
-        reflect::Reflect,
+        reflect::prelude::*,
         uuid::{uuid, Uuid},
         visitor::prelude::*,
     },
@@ -14,7 +13,7 @@ use fyrox::{
     script::{ScriptContext, ScriptDeinitContext, ScriptTrait},
 };
 
-#[derive(Visit, Reflect, Inspect, Default, Debug, Clone)]
+#[derive(Visit, Reflect, Default, Debug, Clone)]
 pub struct CameraController {
     mouse_sensitivity: f32,
     pivot: Handle<Node>,

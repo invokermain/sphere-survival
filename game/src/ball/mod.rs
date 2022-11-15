@@ -1,9 +1,7 @@
 use fyrox::{
     core::{
-        algebra::Vector3,
-        inspect::prelude::*,
         pool::Handle,
-        reflect::Reflect,
+        reflect::prelude::*,
         uuid::{uuid, Uuid},
         visitor::prelude::*,
     },
@@ -14,7 +12,7 @@ use fyrox::{
     script::{ScriptContext, ScriptDeinitContext, ScriptTrait},
 };
 
-#[derive(Visit, Reflect, Inspect, Default, Debug, Clone)]
+#[derive(Visit, Reflect, Default, Debug, Clone)]
 pub struct Ball {
     pub body: Handle<Node>,
 }
@@ -32,7 +30,7 @@ impl ScriptTrait for Ball {
         // Put initialization logic here.
     }
 
-    fn on_start(&mut self, context: &mut ScriptContext) {
+    fn on_start(&mut self, _context: &mut ScriptContext) {
         // let body = context.scene.graph[self.body].as_rigid_body_mut();
         // body.apply_force(Vector3::new(100.0, 0.0, 0.0))
     }
