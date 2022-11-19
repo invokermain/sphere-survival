@@ -60,6 +60,15 @@
         invert_dragging: false,
         drag_speed: 0.01,
         camera_settings: {
+            "data/scene.rgs": (
+                position: [
+                    -17.906452,
+                    12.862488,
+                    -22.488682,
+                ],
+                yaw: 0.85000086,
+                pitch: 0.4300006,
+            ),
             ".\\data\\scene.rgs": (
                 position: [
                     -4.2700005,
@@ -68,15 +77,6 @@
                 ],
                 yaw: 0.0,
                 pitch: 0.0,
-            ),
-            "data/scene.rgs": (
-                position: [
-                    -20.638004,
-                    14.529971,
-                    -24.888287,
-                ],
-                yaw: 0.85000086,
-                pitch: 0.4300006,
             ),
         },
     ),
